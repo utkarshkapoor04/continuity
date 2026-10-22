@@ -1,0 +1,8 @@
+Vendor invoice processing – Client: Arvind Retail.
+1. Download invoices daily from the shared AP inbox.
+2. Check PO number, GST number and amount against the PO in SAP.
+3. If amount matches, post the invoice in SAP and mark 'Ready for payment'.
+4. If amount differs, send to the client AP lead for approval.
+5. Payment run happens every Thursday; invoices posted after Wednesday 6 PM go to next week.
+6. Urgent vendors are paid in the same week.
+7. Month-end: send the open-invoice report to the client controller by working day 2.

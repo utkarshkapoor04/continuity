@@ -1,0 +1,38 @@
+PASS  two sample scenarios are offered on the empty screen  (Month-end close (finance) | Vendor invoices (accounts payable))
+PASS  the accounts-payable scenario fills both boxes  (532 + 234 characters)
+PASS  the month-end close scenario replaces it  (1447 characters)
+PASS  dragging a file over a box highlights it
+PASS  dropping a .txt file puts its text in the box
+PASS  dropping a PDF is refused with a clear message  (Only .txt or .md files can be dropped here. For other formats, copy the text and paste it.)
+PASS  choosing a file works too
+PASS  Ctrl+Enter in the SOP box starts Find gaps
+PASS  questions appear  (5 questions)
+PASS  'Show in context' highlights exactly the quoted text for every question  (5 of 5)
+PASS  the context shows neighbouring lines and says where it is from  (In the SOP/3 lines, In the SOP/3 lines, In the SOP/3 lines, In the SOP/3 lines, In the SOP/3 lines)
+PASS  the button flips to 'Hide context' with aria-expanded
+PASS  clicking again hides every context
+PASS  hovering a question lights it and its answer box together  ({"left":true,"right":true})
+PASS  moving away switches the highlight off
+PASS  clicking a numbered dot jumps to that question's answer box  (a-Q3)
+PASS  Ctrl+Enter in an answer moves on to the next question  (a-Q2)
+PASS  an answered question's dot turns green (answered)  (answered,blank,blank,blank,blank)
+PASS  'One at a time' shows a single question (the one you were on) with Previous and Next  ({"items":1,"label":"Q2. Where should foreign currency bank statements like Singapore's be converted, and whose exchange rate spreadsheet should be used if the ERP rate table is outdated?","hasPrev":true})
+PASS  the answer typed earlier is still there
+PASS  Next and Ctrl+Enter walk through the questions
+PASS  Previous returns to the earlier answer
+PASS  on the last question Next is disabled and says so  ({"nextDisabled":true,"note":"5 of 5 · that was the last one"})
+PASS  switching back shows every question with all answers kept  ({"items":5,"a1":55,"a2":66})
+PASS  sheet builds
+PASS  reviewing rules updates the running count  (Your review: 2 look right · 1 not sure · 9 not yet looked at)
+PASS  marked rules show as pressed, others not  (true,true,false)
+PASS  the 'Not sure' filter shows only the rules you marked not sure  (rule-R2)
+PASS  the exported Markdown carries your review  (4 review lines)
+PASS  clicking 'Looks right' again clears it  (Your review: 1 look right · 1 not sure · 10 not yet looked at)
+PASS  a rule number in a conflict note jumps to that rule and flashes it  (R6 {"flashing":true,"onScreen":true})
+PASS  the flash fades away
+PASS  the bot's citations are clickable rule numbers  (R12)
+PASS  clicking a citation jumps to the rule and flashes it  (R12)
+PASS  the bot still says exactly 'not captured'  (not captured)
+PASS  earlier questions are kept in a list  ({"summary":"Earlier questions (1)","items":1})
+PASS  clicking an earlier question puts it back in the box
+PASS  Ctrl+Enter in the question box asks it

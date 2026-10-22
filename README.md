@@ -83,6 +83,16 @@ The app has four AI calls. Everything else is plain code. The fourth call (the t
 - **Export:** copy the sheet as Markdown, download it as `continuity-rules-sheet.md`, or print it or save it as a PDF. The print view shows only the sheet.
 - **Automatic retry:** if the AI service answers "busy" (HTTP 5xx) or "rate limited" (429), the app waits a moment and tries again, up to three tries in total. A timeout or a rejected key is not retried.
 
+### Interactive touches (all plain code, no extra AI calls)
+- **Two sample scenarios** on the empty screen: month-end close (finance) and vendor invoices (accounts payable). **Drop or choose** a `.txt`, `.md` or `.csv` file into either box. Anything else is refused with a clear message.
+- **Show in context:** each question can reveal the lines around its quote in your own text, with the quote highlighted.
+- **Linked hover:** hovering a question lights up its answer box.
+- **Question navigator:** numbered dots jump to a question and turn green once answered. Switch between **All questions** and **One at a time** (Previous / Next); answers are kept either way.
+- **Review the sheet:** mark each rule **Looks right** or **Not sure**. A running count and a **Not sure** filter help; the exported Markdown carries your marks.
+- **Clickable rule numbers:** an "R6" in a conflict note or in the bot's "Cited:" line jumps to that rule and flashes it.
+- **Ask history:** earlier questions are kept in a list; click one to ask it again.
+- **Keyboard:** Ctrl+Enter starts Find gaps from the SOP or cases box, moves to the next answer, and asks a question in the Ask box.
+
 ## Where AI is used, what stays human, and why
 
 **AI does the reading and writing that needs meaning:** spotting an exception in a case that the SOP never mentions, a step with no fallback, two steps that disagree in different words, and turning free-form answers into clean rules. A keyword rule can't do that.
@@ -196,8 +206,9 @@ lib/ai.ts                 the only file that talks to an AI (Gemini or Claude)
 lib/prompts.ts            the three instructions given to the AI
 lib/validate.ts           input checks and JSON shape checks
 lib/quotes.ts             the quote checker
+lib/locate.ts             finds a quote in your text for "Show in context"
 lib/sheet.ts              open gaps, tags, merging, citation checks
-public/samples/           made-up FP&A month-end close SOP and cases, and an example question bank
+public/samples/           made-up month-end close and vendor-invoice SOPs and cases, and an example question bank
 tests/logic.test.ts       unit tests for the plain-code safety rules
 ```
 

@@ -233,6 +233,15 @@ describe("Markdown export of the sheet", () => {
     expect(md).toContain("Questions answered: 3 of 5 (60%)");
     expect(md).toContain("22 October 2026");
   });
+  it("includes the reader's own review when there is one", () => {
+    const withReview = sheetToMarkdown(rules, open, [open[1]], summarizeSheet(5, rules, 2, 1), "today", { R1: "ok", R2: "unsure" });
+    expect(withReview).toContain("- Your review: looks right");
+    expect(withReview).toContain("- Your review: not sure");
+    expect(withReview).toContain("Your review: 1 look right, 1 not sure, 1 not yet looked at");
+  });
+  it("leaves the review out when nothing was reviewed", () => {
+    expect(md).not.toContain("Your review");
+  });
   it("says so when there are no open gaps", () => {
     expect(sheetToMarkdown(rules, [], [], summarizeSheet(2, rules, 0, 0), "today")).toContain("None. Every question has an answer.");
   });

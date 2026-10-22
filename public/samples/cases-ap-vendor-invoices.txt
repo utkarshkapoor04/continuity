@@ -1,0 +1,3 @@
+Case 1: Invoice from Shree Logistics was 3% higher than the PO; it was posted anyway.
+Case 2: A vendor without a GST number was paid in the Thursday run.
+Case 3: Open-invoice report went out on working day 4; client did not escalate.

@@ -8,6 +8,7 @@ export function sheetToMarkdown(
   inPerson: FlaggedQuestion[],
   summary: SheetSummary,
   date: string,
+  review: Record<string, "ok" | "unsure"> = {},
 ): string {
   const out: string[] = [];
   out.push("# Handover rules sheet", "");
@@ -22,7 +23,11 @@ export function sheetToMarkdown(
   out.push(`- Needs in-person: ${summary.inPerson}`);
   out.push(`- Conflicts to check: ${summary.conflicts}`);
   out.push(`- Rules marked "no contingency documented": ${summary.noContingency}`);
-  out.push(`- Rules with source not found: ${summary.sourceNotFound}`, "");
+  out.push(`- Rules with source not found: ${summary.sourceNotFound}`);
+  const ok = rules.filter((r) => review[r.id] === "ok").length;
+  const unsure = rules.filter((r) => review[r.id] === "unsure").length;
+  if (ok + unsure > 0) out.push(`- Your review: ${ok} look right, ${unsure} not sure, ${rules.length - ok - unsure} not yet looked at`);
+  out.push("");
 
   out.push("## Rules", "");
   for (const r of rules) {
@@ -36,6 +41,7 @@ export function sheetToMarkdown(
     if (r.no_contingency) flags.push("AI-flagged: no contingency documented");
     if (r.question_id && inPerson.some((p) => p.id === r.question_id)) flags.push("needs in-person");
     if (flags.length) out.push(`- Flags: ${flags.join("; ")}`);
+    if (review[r.id]) out.push(`- Your review: ${review[r.id] === "ok" ? "looks right" : "not sure"}`);
     out.push("");
   }
 
