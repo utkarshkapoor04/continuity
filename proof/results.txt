@@ -1,0 +1,12 @@
+Test 1 (sample): 6 questions in 3.9s; 6/6 quotes found word for word in the source
+Test 2 (sample) sheet: 17 rules in 4.5s; source not found: 0; conflicts flagged: 6; leaver rules: 5; added as written: 0
+Test 2 (sample) covered question -> "Use the SGD closing rate published by the Monetary Authority of Singapore for the last day of the month.\nCited: R15\nR15: Use the SGD closing rate published by the Monetary Authority of Singapore for the last day of the month."
+Test 2 (sample) uncovered question -> "not captured" (exact: true)
+Test 3.1 empty box -> "Paste a process description"; API calls: 0
+Test 3.2 short text -> "Paste a process description"; API calls: 0
+Test 3.3 recipe -> "This doesn't look like a process\nThe SOP describes a recipe for making tea rather than a business or organisational work process." in 1.5s
+Test 3.4 sample, all answers blank: 5 questions, open gaps listed: 5; leaver rules: 0; source not found: 0
+Test 1 (AP SOP, fresh material): 5 questions in 3s; 5/5 quotes found word for word
+Test 2 (AP SOP) sheet: 9 rules in 2.8s; source not found: 0; added as written: 0
+Test 2 (AP SOP) covered question -> "Invoices posted after Wednesday 6 PM go to next week (payment run happens every Thursday).\nCited: R5\nR5: Payment run happens every Thursday; invoices posted after Wednesday 6 PM go to next week."
+Test 2 (AP SOP) uncovered question -> "not captured" (exact: true)

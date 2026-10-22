@@ -1,0 +1,13 @@
+
+> continuity@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.5 C:/Users/utkar/OneDrive/Desktop/AI Hackathon
+
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  12:45:01
+   Duration  214ms (transform 38%, import 37%, tests 14%, worker 10%)
+
