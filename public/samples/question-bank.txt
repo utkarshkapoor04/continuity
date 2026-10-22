@@ -1,0 +1,49 @@
+Q: The bank portal is down on WD1. What do I do?
+A: Call Priya at the bank's relationship desk (ext 2214). She emails the statements by 2 pm. Save the PDFs in the Close folder and type the balances into the Recon tab by hand.
+By: Rohan, FP&A analyst
+Date: 4 Sep 2026
+
+Q: Who can unlock the ledger after WD3?
+A: Only the Controller, through an ERP ticket. A request from the CFO on its own is not enough.
+By: Meera, Finance Controller
+Date: 19 Aug 2026
+
+Q: What happens if WD1 falls on a public holiday?
+A: The whole calendar moves by one working day. Meera sends the revised close calendar the day before.
+By: Meera, Finance Controller
+Date: 2 Oct 2026
+
+Q: Who approves a journal above Rs 50 lakh when Meera is on leave?
+A: Anil Rao, the CFO's delegate. Get his approval by email and attach it to the ERP ticket.
+By: Deepak, FP&A analyst
+Date: 11 Jul 2026
+
+Q: Which exchange rate do we use for the Singapore statements?
+A: We agreed on the MAS closing rate for the last day of the month. Deepak's personal sheet is only a backup. Write the rate and the source on the Recon tab.
+By: Deepak, FP&A analyst
+Date: 22 Aug 2026
+
+Q: An intercompany difference under Rs 5,000 is still open on WD3. Do I chase it?
+A: No. Park it in the intercompany suspense account. Meera reviews that account every quarter.
+By: Meera, Finance Controller
+Date: 28 Jul 2026
+
+Q: How does a new analyst get ERP access?
+A: Raise an IT ticket under "ERP role: Finance". It takes about three working days and Meera approves it.
+By: Anil Rao, CFO's delegate
+Date: 6 Jun 2026
+
+Q: Should I resend the variance pack to the CFO after a late posting on WD5?
+A: Yes, always resend it, and say in the email what changed.
+By: Deepak, FP&A analyst
+Date: 24 Aug 2026
+
+Q: Do I need to resend the variance pack for a small late posting?
+A: Only if the posting moves a line by more than Rs 10 lakh. Smaller changes can wait for next month's pack.
+By: Meera, Finance Controller
+Date: 3 Sep 2026
+
+Q: Where is the Close folder?
+A: On the shared finance drive under Close, then the year and month. Ask IT for access if you cannot see it.
+By: Rohan, FP&A analyst
+Date: 15 May 2026

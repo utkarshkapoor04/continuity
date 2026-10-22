@@ -1,4 +1,5 @@
 import type { AskAI, GapsAI, Question, Rule, SheetAI } from "./types";
+import type { BankAI } from "./bank";
 
 export const MIN_CHARS = 200;
 export const MAX_CHARS = 30000;
@@ -53,6 +54,12 @@ export function parseSheet(x: unknown): SheetAI | null {
     });
   }
   return { rules };
+}
+
+export function parseBankAnswer(x: unknown): BankAI | null {
+  if (!isObj(x) || typeof x.found !== "boolean" || !isStr(x.answer)) return null;
+  if (!Array.isArray(x.entry_ids) || !x.entry_ids.every(isStr)) return null;
+  return { found: x.found, answer: x.answer, entry_ids: x.entry_ids };
 }
 
 export function parseAsk(x: unknown): AskAI | null {

@@ -35,7 +35,7 @@ All three were checked in the running app with the made-up FP&A sample and a sep
 
 ## Architecture: Input → AI → Logic → Action → Output
 
-The app has three AI calls. Everything else is plain code.
+The app has four AI calls. Everything else is plain code. The fourth call (the team question bank) was added after the original three-call plan.
 
 ### A. Find gaps
 - **Input:** SOP text and cases (typed, pasted, or loaded from the sample).
@@ -65,6 +65,18 @@ The app has three AI calls. Everything else is plain code.
 - **Logic (plain code):** if the AI says "not covered", or cites no rule that really exists, the screen shows exactly `not captured`, whatever the AI wrote.
 - **Action:** the Ask box only appears after you click **Confirm sheet**.
 - **Output:** the answer with its cited rules shown underneath, or `not captured`.
+
+### D. Ask the team question bank (outside the SOP)
+- **Input:** a question, plus a **team question bank**: past questions and answers between colleagues (who answered, and when). Paste your own, or click **Load example bank**. Format: `Q:`, `A:`, `By:`, `Date:` lines, with a blank line between entries.
+- **AI (call 4):** answers only from the bank. If entries disagree, the answer starts with "The answers disagree." and says what each one says.
+- **Logic (plain code):**
+  - Parses the bank, numbers the entries B1, B2 and so on, and skips entries missing a `Q:` or `A:`.
+  - If the bank is large, sends only the entries that share the most words with the question.
+  - Checks that every cited entry really exists. If the AI cites none, or says it found nothing, the screen shows exactly `not in the bank`.
+  - Rejects an answer that names a person whose entry was not cited, so a past answer is never credited to the wrong colleague.
+  - Prints who said it and when next to each cited entry, straight from the bank, not from the AI.
+- **Action:** switch to the **Team question bank** tab in the Ask panel. When the rules sheet answers `not captured`, a link offers to search the bank with the same question.
+- **Output:** the answer, labelled "From team Q&A. Not the SOP.", with the cited entries underneath. This is informal knowledge, so it is kept apart from the sheet, which is built only from the SOP, the cases and the leaver's answers.
 
 ### Also included
 - **Handover status ring:** above the rules sheet, a circular progress ring and a count of questions answered, open gaps, items that need in-person, conflicts to check, rules marked "no contingency documented", and rules with source not found. A small floating ring shows the same progress live from the moment the questions appear. It is plain counting, with no AI call.
@@ -107,7 +119,14 @@ The app has three AI calls. Everything else is plain code.
 | AI invents or alters a quote | A red "source not found" badge. Such rules are also kept out of what the bot knows. |
 | AI quotes a short fragment to back a rule | Treated as not found. A short quote must be a whole sentence of the source. |
 | AI drops part of a leaver's answer | The missing sentence is added to the sheet word for word, tagged "added as written" |
-| Bot can't answer from the sheet | Exactly `not captured` |
+| Bot can't answer from the sheet | Exactly `not captured`, with a link to try the team question bank |
+| Asking the bank with no bank loaded | "Load a question bank first, or paste your own below." No AI call. |
+| The bank has no answer | Exactly `not in the bank` |
+| AI cites a bank entry that doesn't exist | Exactly `not in the bank` |
+| AI credits an answer to the wrong person | The answer is rejected and shown as `not in the bank` |
+| Two bank entries disagree | The answer starts "The answers disagree." and both entries are shown |
+| A bank entry has no `Q:` or `A:` line | It is skipped, and the count says how many were skipped |
+| Bank over 200 entries or 40,000 characters | Extra entries are ignored, or a "too large" message is shown |
 | All answers left blank | A sheet from the SOP only, and every question listed as an open gap |
 
 **Known limits:**
@@ -171,12 +190,14 @@ app/page.tsx              the one screen (all state lives here, in the browser)
 app/api/gaps/route.ts     AI call 1: find gaps
 app/api/sheet/route.ts    AI call 2: build the rules sheet
 app/api/ask/route.ts      AI call 3: answer from the sheet
+app/api/bank/route.ts     AI call 4: answer from the team question bank
+lib/bank.ts               question bank: parsing, choosing entries, checking answers
 lib/ai.ts                 the only file that talks to an AI (Gemini or Claude)
 lib/prompts.ts            the three instructions given to the AI
 lib/validate.ts           input checks and JSON shape checks
 lib/quotes.ts             the quote checker
 lib/sheet.ts              open gaps, tags, merging, citation checks
-public/samples/           made-up FP&A month-end close SOP and cases
+public/samples/           made-up FP&A month-end close SOP and cases, and an example question bank
 tests/logic.test.ts       unit tests for the plain-code safety rules
 ```
 

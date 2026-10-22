@@ -66,6 +66,24 @@ export function sheetUser(sop: string, cases: string, questions: Question[], ans
   return `<sop>\n${sop}\n</sop>\n\n<cases>\n${cases || "(none provided)"}\n</cases>\n\n<leaver_answers>\n${qa}\n</leaver_answers>`;
 }
 
+// ---------- AI call 4: answer from the team question bank (outside the SOP) ----------
+
+export const BANK_SYSTEM = `You answer a colleague's question using ONLY the team question bank provided. The bank holds past questions and answers between employees. It is informal knowledge from colleagues, not the SOP and not official policy. ${SAFETY}
+
+If the entries clearly answer the question, set found to true and put a short answer in the "answer" field. If two entries disagree, start the "answer" field with "The answers disagree." and then say what each one says. Do not say who wrote an entry or when it was written: the app shows that next to each cited entry. You may keep a person named inside an answer, for example someone to call. Do not add any fact that is not in the entries. List the ids of the entries you used in entry_ids.
+If the entries do not clearly answer it, set found to false, answer to an empty string, and entry_ids to an empty list. Never use outside knowledge.
+
+Your whole reply must be one JSON object in exactly this shape:
+{"found": true, "answer": "", "entry_ids": ["B1"]}`;
+
+export function bankUser(entries: { id: string; question: string; answer: string; by: string; date: string }[], question: string): string {
+  // Leave out "by" and "date" when they are empty, so the AI never says "said on unknown".
+  const bank = entries
+    .map((e) => `${e.id} | question: ${e.question} | answer: ${e.answer}${e.by ? ` | by: ${e.by}` : ""}${e.date ? ` | date: ${e.date}` : ""}`)
+    .join("\n");
+  return `<bank>\n${bank}\n</bank>\n\n<question>\n${question}\n</question>`;
+}
+
 // ---------- AI call 3: answer a question from the sheet ----------
 
 export const ASK_SYSTEM = `You answer questions for someone running a work process, using ONLY the rules sheet provided. ${SAFETY}

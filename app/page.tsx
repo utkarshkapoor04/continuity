@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { checkInput } from "../lib/validate";
 import { sheetToMarkdown } from "../lib/export";
 import { summarizeSheet } from "../lib/sheet";
+import { parseBank } from "../lib/bank";
+import type { BankEntry } from "../lib/bank";
 import type { Answers, FlaggedQuestion, Question, Rule } from "../lib/types";
 
 type Fail = { ok: false; message: string; detail?: string };
 type Busy = "gaps" | "sheet" | "ask" | null;
 type Sheet = { rules: Rule[]; openGaps: FlaggedQuestion[]; inPerson: FlaggedQuestion[] };
 type AskResult = { captured: boolean; answer: string; cited: Rule[] };
+type BankResult = { found: boolean; answer: string; cited: BankEntry[] };
 type Filter = "all" | "conflict" | "nocont" | "leaver" | "missing";
+type AskMode = "sheet" | "bank";
 
 const GAP_MESSAGES = ["Reading the SOP…", "Checking it against the cases…", "Writing questions for the leaver…"];
 const SHEET_MESSAGES = ["Reading the leaver's answers…", "Writing rules, each with its quote…", "Checking for conflicts and gaps…"];
-const SUGGESTIONS = ["Who approves exceptions?", "What if a step fails?", "What are the deadlines?"];
+const SHEET_SUGGESTIONS = ["Who approves exceptions?", "What if a step fails?", "What are the deadlines?"];
+const BANK_SUGGESTIONS = ["What if the bank portal is down?", "Who can unlock the ledger?", "How does a new analyst get ERP access?"];
 const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "conflict", label: "Conflicts" },
@@ -55,7 +60,7 @@ function Spinner() {
 }
 
 // A circular progress ring. `percent` is 0 to 100; whatever is passed as children sits in the middle.
-function Ring({ percent, size = 112, stroke = 11, children }: { percent: number; size?: number; stroke?: number; children?: ReactNode }) {
+function Ring({ percent, size = 96, stroke = 7, children }: { percent: number; size?: number; stroke?: number; children?: ReactNode }) {
   const p = Math.min(100, Math.max(0, percent));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -114,8 +119,6 @@ function matchesFilter(r: Rule, f: Filter): boolean {
 function ruleClass(r: Rule): string {
   if (r.source_found === false) return "rule--missing";
   if (r.conflict) return "rule--conflict";
-  if (r.no_contingency) return "rule--nocont";
-  if (r.source === "leaver") return "rule--leaver";
   return "";
 }
 
@@ -129,16 +132,21 @@ export default function Home() {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [askText, setAskText] = useState("");
+  const [askMode, setAskMode] = useState<AskMode>("sheet");
   const [askResult, setAskResult] = useState<AskResult | null>(null);
+  const [bankText, setBankText] = useState("");
+  const [bankResult, setBankResult] = useState<BankResult | null>(null);
   const [exportMsg, setExportMsg] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
   const [gapsError, setGapsError] = useState<Fail | null>(null);
   const [sheetError, setSheetError] = useState<Fail | null>(null);
   const [askError, setAskError] = useState<Fail | null>(null);
+  const [bankError, setBankError] = useState<Fail | null>(null);
 
   const gapMessage = useCycle(GAP_MESSAGES, busy === "gaps");
   const sheetMessage = useCycle(SHEET_MESSAGES, busy === "sheet");
+  const bank = useMemo(() => parseBank(bankText), [bankText]);
 
   useEffect(() => { if (questions.length > 0) scrollToSection("sec-gaps"); }, [questions.length]);
   useEffect(() => { if (sheet) scrollToSection("sec-sheet"); }, [sheet]);
@@ -159,9 +167,20 @@ export default function Home() {
     }
   }
 
+  async function loadBankSample() {
+    try {
+      const res = await fetch("/samples/question-bank.txt");
+      if (!res.ok) throw new Error("missing");
+      setBankText(await res.text());
+      setBankError(null);
+    } catch {
+      setBankError({ ok: false, message: "Couldn't load the example bank." });
+    }
+  }
+
   async function findGaps() {
-    setQuestions([]); setAnswers({}); setSheet(null); setConfirmed(false); setAskResult(null);
-    setSheetError(null); setAskError(null);
+    setQuestions([]); setAnswers({}); setSheet(null); setConfirmed(false); setAskResult(null); setBankResult(null);
+    setSheetError(null); setAskError(null); setBankError(null);
     const problem = checkInput(sop, cases);
     if (problem) {
       setGapsError({ ok: false, message: problem });
@@ -183,7 +202,7 @@ export default function Home() {
   }
 
   async function buildSheet() {
-    setSheet(null); setConfirmed(false); setAskResult(null); setSheetError(null); setFilter("all");
+    setSheet(null); setConfirmed(false); setAskResult(null); setBankResult(null); setSheetError(null); setFilter("all");
     setBusy("sheet");
     const res = await post<{ ok: true } & Sheet>("/api/sheet", { sop, cases, questions, answers });
     setBusy(null);
@@ -198,6 +217,30 @@ export default function Home() {
     setBusy(null);
     if (res.ok) setAskResult(res);
     else setAskError(res);
+  }
+
+  async function askBank() {
+    setBankResult(null); setBankError(null);
+    if (bank.entries.length === 0) {
+      setBankError({ ok: false, message: "Load a question bank first, or paste your own below." });
+      return;
+    }
+    setBusy("ask");
+    const res = await post<{ ok: true } & BankResult>("/api/bank", { question: askText, entries: bank.entries });
+    setBusy(null);
+    if (res.ok) setBankResult(res);
+    else setBankError(res);
+  }
+
+  function submitAsk() {
+    if (askMode === "sheet") ask();
+    else askBank();
+  }
+
+  // From a "not captured" answer: try the same question against the team question bank.
+  function tryBank() {
+    setAskMode("bank");
+    if (bank.entries.length > 0) askBank();
   }
 
   const summary = sheet ? summarizeSheet(questions.length, sheet.rules, sheet.openGaps.length, sheet.inPerson.length) : null;
@@ -235,7 +278,7 @@ export default function Home() {
   }
 
   // Which step of the journey the person is on.
-  const done = [questions.length > 0, !!sheet, confirmed, !!askResult];
+  const done = [questions.length > 0, !!sheet, confirmed, !!(askResult || bankResult)];
   const currentStep = done.findIndex((d) => !d);
   const steps = [
     { id: "sec-input", label: "Paste", enabled: true },
@@ -243,12 +286,14 @@ export default function Home() {
     { id: "sec-sheet", label: "Rules sheet", enabled: !!sheet },
     { id: "sec-ask", label: "Ask the bot", enabled: confirmed },
   ];
+  const dockPercent = questions.length ? Math.round((answeredNow / questions.length) * 100) : 0;
+  const askErr = askMode === "sheet" ? askError : bankError;
 
   return (
     <>
       <header className="hero">
         <div className="wrap">
-          <h1><span className="mark">Continuity</span></h1>
+          <h1>Continuity</h1>
           <p className="tagline">Paste the handover SOP and a few real cases. Find what they don&apos;t say.</p>
           <nav className="stepper" aria-label="Progress">
             <ol>
@@ -264,11 +309,7 @@ export default function Home() {
 
       <main>
         {questions.length === 0 && busy !== "gaps" && (
-          <div className="how">
-            <div className="how-card"><strong>Paste the SOP and cases</strong><span>Or load the sample to see it work in a minute.</span></div>
-            <div className="how-card"><strong>See what it leaves out</strong><span>Every question quotes the exact line it comes from.</span></div>
-            <div className="how-card"><strong>Get a sourced rules sheet</strong><span>The leaver answers, and every rule keeps its quote.</span></div>
-          </div>
+          <p className="how">New here? Load the sample to see the whole flow in about a minute.</p>
         )}
 
         <section className="card" id="sec-input">
@@ -363,7 +404,7 @@ export default function Home() {
         )}
 
         {sheet && (
-          <section className="card print-sheet" id="sec-sheet" style={{ marginTop: 18 }}>
+          <section className="card print-sheet" id="sec-sheet">
             <h2>3. Rules sheet</h2>
             {summary && (
               <div className="status" role="group" aria-label="Handover status">
@@ -460,31 +501,87 @@ export default function Home() {
         )}
 
         {sheet && confirmed && (
-          <section className="card" id="sec-ask" style={{ marginTop: 18 }}>
+          <section className="card" id="sec-ask">
             <h2>4. Ask the bot</h2>
-            <p className="note">It answers only from the confirmed rules above.</p>
+            <div className="tabs" role="tablist" aria-label="Where the bot looks">
+              <button type="button" role="tab" aria-selected={askMode === "sheet"} className={`chip${askMode === "sheet" ? " on" : ""}`} onClick={() => setAskMode("sheet")}>Rules sheet</button>
+              <button type="button" role="tab" aria-selected={askMode === "bank"} className={`chip${askMode === "bank" ? " on" : ""}`} onClick={() => setAskMode("bank")}>Team question bank</button>
+            </div>
+            <p className="note">
+              {askMode === "sheet"
+                ? "It answers only from the confirmed rules above."
+                : "For questions the SOP does not cover. It answers from past questions between colleagues. This is unofficial: it is not from the SOP."}
+            </p>
+
+            {askMode === "bank" && (
+              <div className="bank">
+                <label htmlFor="bank">Question bank</label>
+                <textarea
+                  id="bank"
+                  rows={7}
+                  value={bankText}
+                  onChange={(e) => setBankText(e.target.value)}
+                  placeholder={"Q: What if the portal is down?\nA: Call the bank's desk.\nBy: Rohan, FP&A analyst\nDate: 4 Sep 2026\n\n(one blank line between entries)"}
+                />
+                <div className="row">
+                  <button type="button" className="secondary" onClick={loadBankSample}>Load example bank</button>
+                  {bankText && <button type="button" className="secondary" onClick={() => { setBankText(""); setBankResult(null); }}>Clear</button>}
+                  <span className="note" role="status">
+                    {bank.entries.length} {bank.entries.length === 1 ? "entry" : "entries"} loaded
+                    {bank.skipped > 0 ? ` · ${bank.skipped} skipped (each needs a Q: and an A: line)` : ""}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <label htmlFor="ask">Your question</label>
             <textarea id="ask" rows={2} value={askText} onChange={(e) => setAskText(e.target.value)} />
             <div className="suggest">
               <span className="note">Try:</span>
-              {SUGGESTIONS.map((s) => (
+              {(askMode === "sheet" ? SHEET_SUGGESTIONS : BANK_SUGGESTIONS).map((s) => (
                 <button key={s} type="button" className="chip" onClick={() => setAskText(s)}>{s}</button>
               ))}
             </div>
             <div className="row">
-              <button onClick={ask} disabled={busy !== null || askText.trim() === ""}>
+              <button onClick={submitAsk} disabled={busy !== null || askText.trim() === ""}>
                 {busy === "ask" ? <><Spinner />Thinking…</> : "Ask"}
               </button>
             </div>
-            <ErrorBox error={askError} />
-            {askResult && (
-              <div className={`item answer-card${askResult.captured ? "" : " not-captured"}`}>
-                <div className="answer">{askResult.answer}</div>
-                {askResult.captured && (
+            <ErrorBox error={askErr} />
+
+            {askMode === "sheet" && askResult && (
+              <>
+                <div className={`item answer-card${askResult.captured ? "" : " not-captured"}`}>
+                  <div className="answer">{askResult.answer}</div>
+                  {askResult.captured && (
+                    <>
+                      <div className="note">Cited: {askResult.cited.map((r) => r.id).join(", ")}</div>
+                      {askResult.cited.map((r) => (
+                        <blockquote key={r.id}><strong>{r.id}:</strong> {r.rule}</blockquote>
+                      ))}
+                    </>
+                  )}
+                </div>
+                {!askResult.captured && (
+                  <p className="fallback note">
+                    The sheet doesn&apos;t cover this. <button type="button" className="linklike" onClick={tryBank}>Search the team question bank</button>
+                  </p>
+                )}
+              </>
+            )}
+
+            {askMode === "bank" && bankResult && (
+              <div className={`item answer-card bank-card${bankResult.found ? "" : " not-captured"}`}>
+                <div className="answer">{bankResult.answer}</div>
+                {bankResult.found && (
                   <>
-                    <div className="note">Cited: {askResult.cited.map((r) => r.id).join(", ")}</div>
-                    {askResult.cited.map((r) => (
-                      <blockquote key={r.id}><strong>{r.id}:</strong> {r.rule}</blockquote>
+                    <div className="origin">From team Q&amp;A. Not the SOP.</div>
+                    {bankResult.cited.map((e) => (
+                      <blockquote key={e.id}>
+                        <strong>{e.id}</strong> {e.question}<br />
+                        {e.answer}
+                        {(e.by || e.date) && <span className="by"> — {[e.by, e.date].filter(Boolean).join(", ")}</span>}
+                      </blockquote>
                     ))}
                   </>
                 )}
@@ -496,8 +593,8 @@ export default function Home() {
 
       {questions.length > 0 && (
         <a className="dock no-print" href={sheet ? "#sec-sheet" : "#sec-gaps"} aria-label={`Progress: ${answeredNow} of ${questions.length} questions answered`}>
-          <Ring percent={Math.round((answeredNow / questions.length) * 100)} size={54} stroke={6}>
-            <span className="ring-pct">{Math.round((answeredNow / questions.length) * 100)}%</span>
+          <Ring percent={dockPercent} size={48} stroke={5}>
+            <span className="ring-pct">{dockPercent}%</span>
           </Ring>
           <span className="dock-text">
             <strong>{answeredNow} of {questions.length}</strong> answered
