@@ -26,6 +26,32 @@ export function mergeQuestions(first: Question[], more: Question[]): Question[] 
   return out.slice(0, MAX_QUESTIONS).map((q, i) => ({ ...q, id: `Q${i + 1}` }));
 }
 
+export type SheetSummary = {
+  total: number;
+  answered: number;
+  open: number;
+  inPerson: number;
+  conflicts: number;
+  noContingency: number;
+  sourceNotFound: number;
+  percent: number;
+};
+
+// The numbers behind the "handover status" bar. Plain counting, no AI.
+export function summarizeSheet(totalQuestions: number, rules: Rule[], openCount: number, inPersonCount: number): SheetSummary {
+  const answered = Math.min(totalQuestions, Math.max(0, totalQuestions - openCount));
+  return {
+    total: totalQuestions,
+    answered,
+    open: openCount,
+    inPerson: inPersonCount,
+    conflicts: rules.filter((r) => r.conflict).length,
+    noContingency: rules.filter((r) => r.no_contingency).length,
+    sourceNotFound: rules.filter((r) => r.source_found === false).length,
+    percent: totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0,
+  };
+}
+
 // Questions the leaver left blank. Every one of these is an open gap.
 export function openGaps(questions: Question[], answers: Answers): FlaggedQuestion[] {
   return questions

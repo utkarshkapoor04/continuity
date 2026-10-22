@@ -2,6 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import { checkInput } from "../lib/validate";
+import { sheetToMarkdown } from "../lib/export";
+import { summarizeSheet } from "../lib/sheet";
 import type { Answers, FlaggedQuestion, Question, Rule } from "../lib/types";
 
 type Fail = { ok: false; message: string; detail?: string };
@@ -22,7 +24,7 @@ async function post<R>(url: string, body: unknown): Promise<R | Fail> {
   }
 }
 
-function Badge({ color, children }: { color: "red" | "amber" | "blue" | "grey"; children: ReactNode }) {
+function Badge({ color, children }: { color: "red" | "amber" | "blue" | "grey" | "green"; children: ReactNode }) {
   return <span className={`badge ${color}`}>{children}</span>;
 }
 
@@ -47,6 +49,7 @@ export default function Home() {
   const [confirmed, setConfirmed] = useState(false);
   const [askText, setAskText] = useState("");
   const [askResult, setAskResult] = useState<AskResult | null>(null);
+  const [exportMsg, setExportMsg] = useState("");
 
   const [gapsError, setGapsError] = useState<Fail | null>(null);
   const [sheetError, setSheetError] = useState<Fail | null>(null);
@@ -106,6 +109,36 @@ export default function Home() {
     setBusy(null);
     if (res.ok) setAskResult(res);
     else setAskError(res);
+  }
+
+  const summary = sheet ? summarizeSheet(questions.length, sheet.rules, sheet.openGaps.length, sheet.inPerson.length) : null;
+
+  function sheetMarkdown(): string {
+    if (!sheet || !summary) return "";
+    const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    return sheetToMarkdown(sheet.rules, sheet.openGaps, sheet.inPerson, summary, date);
+  }
+
+  async function copySheet() {
+    try {
+      await navigator.clipboard.writeText(sheetMarkdown());
+      setExportMsg("Copied to the clipboard.");
+    } catch {
+      setExportMsg("Copying was blocked here. Use Download instead.");
+    }
+  }
+
+  function downloadSheet() {
+    const blob = new Blob([sheetMarkdown()], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "continuity-rules-sheet.md";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setExportMsg("Downloaded continuity-rules-sheet.md.");
   }
 
   return (
@@ -183,8 +216,29 @@ export default function Home() {
       )}
 
       {sheet && (
-        <section className="card">
+        <section className="card print-sheet">
           <h2>3. Rules sheet</h2>
+          {summary && (
+            <div className="status" role="group" aria-label="Handover status">
+              <div>
+                <strong>Handover status:</strong> {summary.answered} of {summary.total} questions answered ({summary.percent}%)
+              </div>
+              <div className="bar" aria-hidden="true"><span style={{ width: `${summary.percent}%` }} /></div>
+              <div className="chips">
+                <Badge color={summary.open > 0 ? "amber" : "green"}>{summary.open} open {summary.open === 1 ? "gap" : "gaps"}</Badge>
+                <Badge color={summary.inPerson > 0 ? "blue" : "grey"}>{summary.inPerson} needs in-person</Badge>
+                <Badge color={summary.conflicts > 0 ? "red" : "green"}>{summary.conflicts} {summary.conflicts === 1 ? "conflict" : "conflicts"} to check</Badge>
+                <Badge color={summary.noContingency > 0 ? "amber" : "green"}>{summary.noContingency} no contingency documented</Badge>
+                <Badge color={summary.sourceNotFound > 0 ? "red" : "green"}>{summary.sourceNotFound} source not found</Badge>
+              </div>
+            </div>
+          )}
+          <div className="row no-print">
+            <button className="secondary" onClick={copySheet}>Copy as Markdown</button>
+            <button className="secondary" onClick={downloadSheet}>Download .md</button>
+            <button className="secondary" onClick={() => window.print()}>Print or save as PDF</button>
+            {exportMsg && <span className="note" role="status">{exportMsg}</span>}
+          </div>
           <p className="note">
             Tags marked AI-flagged are the AI&apos;s judgement. Check them against the quote beside each rule.
           </p>

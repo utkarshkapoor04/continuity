@@ -29,5 +29,15 @@ blockquote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--line
 .badge.amber { background: var(--amber-bg); color: var(--amber); }
 .badge.blue { background: var(--blue-bg); color: var(--blue); }
 .badge.grey { background: var(--grey-bg); color: var(--muted); }
+.badge.green { background: #dcf3e4; color: #14703f; }
+.status { border: 1px solid var(--line); background: var(--grey-bg); border-radius: 8px; padding: 12px 14px; margin: 4px 0 8px; }
+.bar { height: 8px; background: #fff; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin: 8px 0 10px; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px 2px; }
+@media print {
+  body { background: #fff; }
+  section.card:not(.print-sheet), .no-print, button, h1, .tagline { display: none !important; }
+  .card.print-sheet { border: 0; padding: 0; margin: 0; }
+}
 .why { color: var(--muted); font-size: 14px; }
 .answer { font-weight: 600; font-size: 17px; }

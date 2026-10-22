@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { quoteFound } from "../lib/quotes";
-import { addMissingLeaverRules, annotateQuestions, finalizeAsk, mergeQuestions, openGaps, tagRules } from "../lib/sheet";
+import { addMissingLeaverRules, annotateQuestions, finalizeAsk, mergeQuestions, openGaps, summarizeSheet, tagRules } from "../lib/sheet";
+import { isTransient, withRetry } from "../lib/retry";
+import { sheetToMarkdown } from "../lib/export";
 import { checkInput, parseAsk, parseSheet } from "../lib/validate";
 import type { Answers, Question, Rule } from "../lib/types";
 
@@ -157,6 +159,82 @@ describe("bot answer", () => {
     const out = finalizeAsk({ covered: true, answer: "Lock on WD3.", rule_ids: ["R2", "R9"] }, rules);
     expect(out.captured).toBe(true);
     expect(out.cited.map((r) => r.id)).toEqual(["R2"]);
+  });
+});
+
+describe("retry when the AI service is busy", () => {
+  const busy = () => Object.assign(new Error("busy"), { status: 503 });
+  const noWait = async () => {};
+  it("treats 429 and 5xx as transient, and nothing else", () => {
+    expect([429, 500, 503].map((s) => isTransient({ status: s }))).toEqual([true, true, true]);
+    expect([400, 401, 404].map((s) => isTransient({ status: s }))).toEqual([false, false, false]);
+    expect(isTransient(new Error("timeout"))).toBe(false);
+  });
+  it("succeeds after two busy replies", async () => {
+    let calls = 0;
+    const out = await withRetry(async () => { calls++; if (calls < 3) throw busy(); return "ok"; }, 3, noWait);
+    expect(out).toBe("ok");
+    expect(calls).toBe(3);
+  });
+  it("gives up after the last try", async () => {
+    let calls = 0;
+    await expect(withRetry(async () => { calls++; throw busy(); }, 3, noWait)).rejects.toThrow("busy");
+    expect(calls).toBe(3);
+  });
+  it("does not retry a real error such as a rejected key", async () => {
+    let calls = 0;
+    await expect(withRetry(async () => { calls++; throw Object.assign(new Error("bad key"), { status: 401 }); }, 3, noWait)).rejects.toThrow("bad key");
+    expect(calls).toBe(1);
+  });
+});
+
+describe("handover status numbers", () => {
+  const rules = [
+    rule({ id: "R1", conflict: true }),
+    rule({ id: "R2", conflict: true, no_contingency: true }),
+    rule({ id: "R3", source_found: false }),
+    rule({ id: "R4" }),
+  ];
+  it("counts answered, open, conflicts and flags", () => {
+    const s = summarizeSheet(5, rules, 2, 1);
+    expect(s).toEqual({ total: 5, answered: 3, open: 2, inPerson: 1, conflicts: 2, noContingency: 1, sourceNotFound: 1, percent: 60 });
+  });
+  it("handles zero questions and never goes below 0 or above 100", () => {
+    expect(summarizeSheet(0, [], 0, 0).percent).toBe(0);
+    expect(summarizeSheet(3, [], 5, 0).answered).toBe(0);
+    expect(summarizeSheet(3, [], 0, 0).percent).toBe(100);
+  });
+});
+
+describe("Markdown export of the sheet", () => {
+  const rules = [
+    rule({ id: "R1", rule: "Send the calendar.", quote: "The Finance Controller sends the close calendar." }),
+    rule({ id: "R2", rule: "Lock on WD3.", quote: "The ledger is locked at the end of WD3.", conflict: true, conflict_note: "R2 disagrees with R3", no_contingency: true, question_id: "Q5" }),
+    rule({ id: "R3", rule: "Added by code.", quote: "It was a mistake.", source: "leaver", added_as_written: true, source_found: false }),
+  ];
+  const open = [{ id: "Q4", question: "What if the portal is down?", inPerson: false }, { id: "Q5", question: "Who approves late items?", inPerson: true }];
+  const md = sheetToMarkdown(rules, open, [open[1]], summarizeSheet(5, rules, 2, 1), "22 October 2026");
+  it("contains every rule with its quote and source", () => {
+    expect(md).toContain("### R1. Send the calendar.");
+    expect(md).toContain('- Quote: "The ledger is locked at the end of WD3."');
+    expect(md).toContain("- Source: leaver");
+  });
+  it("carries the flags", () => {
+    expect(md).toContain("AI-flagged conflict: R2 disagrees with R3");
+    expect(md).toContain("AI-flagged: no contingency documented");
+    expect(md).toContain("needs in-person");
+    expect(md).toContain("source not found");
+    expect(md).toContain("added as written");
+  });
+  it("lists open gaps, in-person items and the status", () => {
+    expect(md).toContain("- Q4. What if the portal is down?");
+    expect(md).toContain("- Q5. Who approves late items? (needs in-person)");
+    expect(md).toContain("## Needs in-person");
+    expect(md).toContain("Questions answered: 3 of 5 (60%)");
+    expect(md).toContain("22 October 2026");
+  });
+  it("says so when there are no open gaps", () => {
+    expect(sheetToMarkdown(rules, [], [], summarizeSheet(2, rules, 0, 0), "today")).toContain("None. Every question has an answer.");
   });
 });
 

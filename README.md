@@ -66,6 +66,11 @@ The app has three AI calls. Everything else is plain code.
 - **Action:** the Ask box only appears after you click **Confirm sheet**.
 - **Output:** the answer with its cited rules shown underneath, or `not captured`.
 
+### Also included
+- **Handover status bar:** above the rules sheet, a count of questions answered, open gaps, items that need in-person, conflicts to check, rules marked "no contingency documented", and rules with source not found. It is plain counting, with no AI call.
+- **Export:** copy the sheet as Markdown, download it as `continuity-rules-sheet.md`, or print it or save it as a PDF. The print view shows only the sheet.
+- **Automatic retry:** if the AI service answers "busy" (HTTP 5xx) or "rate limited" (429), the app waits a moment and tries again, up to three tries in total. A timeout or a rejected key is not retried.
+
 ## Where AI is used, what stays human, and why
 
 **AI does the reading and writing that needs meaning:** spotting an exception in a case that the SOP never mentions, a step with no fallback, two steps that disagree in different words, and turning free-form answers into clean rules. A keyword rule can't do that.
@@ -95,7 +100,8 @@ The app has three AI calls. Everything else is plain code.
 | Not a work process (recipe, story, hobby) | "This doesn't look like a process", plus the AI's one-line reason |
 | Sample file can't load | "Couldn't load the sample." Your typed text is left alone. |
 | API key missing or rejected | A clear message pointing to `.env.local` |
-| AI provider busy, down, or times out | "Something went wrong, try again." (Free Gemini sometimes returns 503.) There is no automatic retry yet. |
+| AI provider busy (5xx) or rate-limited (429) | The app retries automatically, up to three tries in total. If it is still busy: "The AI service is busy right now. Try again in a moment." |
+| AI provider times out or is down | "Something went wrong, try again." A timeout is not retried, because it already used the time limit. |
 | AI returns broken JSON twice | The same friendly error, never a crash |
 | AI returns fewer than 5 questions | Code asks for more. If it still falls short, it says "Only N gaps found for this text." |
 | AI invents or alters a quote | A red "source not found" badge. Such rules are also kept out of what the bot knows. |

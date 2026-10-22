@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { withRetry } from "./retry";
 
 // Which AI to use is set in .env.local:  AI_PROVIDER=gemini  (free, for testing)  or  claude
 const PROVIDER = process.env.AI_PROVIDER === "claude" ? "claude" : "gemini";
@@ -66,7 +67,7 @@ export async function askAI<T>(
 ): Promise<T> {
   const call = PROVIDER === "claude" ? callClaude : callGemini;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await call(system, user, maxTokens);
+    const text = await withRetry(() => call(system, user, maxTokens));
     try {
       const parsed = parse(extractJson(text));
       if (parsed) return parsed;
@@ -84,5 +85,6 @@ export function friendlyMessage(e: unknown): string {
     return "The API key or model name was rejected. Check .env.local, then restart the app.";
   }
   if (status === 429) return "Free-tier limit reached. Wait a minute and try again.";
+  if (typeof status === "number" && status >= 500) return "The AI service is busy right now. Try again in a moment.";
   return "Something went wrong, try again.";
 }
