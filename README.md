@@ -67,7 +67,7 @@ The app has three AI calls. Everything else is plain code.
 - **Output:** the answer with its cited rules shown underneath, or `not captured`.
 
 ### Also included
-- **Handover status bar:** above the rules sheet, a count of questions answered, open gaps, items that need in-person, conflicts to check, rules marked "no contingency documented", and rules with source not found. It is plain counting, with no AI call.
+- **Handover status ring:** above the rules sheet, a circular progress ring and a count of questions answered, open gaps, items that need in-person, conflicts to check, rules marked "no contingency documented", and rules with source not found. A small floating ring shows the same progress live from the moment the questions appear. It is plain counting, with no AI call.
 - **Export:** copy the sheet as Markdown, download it as `continuity-rules-sheet.md`, or print it or save it as a PDF. The print view shows only the sheet.
 - **Automatic retry:** if the AI service answers "busy" (HTTP 5xx) or "rate limited" (429), the app waits a moment and tries again, up to three tries in total. A timeout or a rejected key is not retried.
 
