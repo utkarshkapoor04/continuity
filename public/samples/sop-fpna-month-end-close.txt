@@ -1,0 +1,14 @@
+Month-End Close - Standard Operating Procedure
+Northbridge Services Pvt Ltd, FP&A and Finance Operations (Mumbai)
+Entities in scope: Northbridge Mumbai, Northbridge Pune, Northbridge Singapore. WD means working day.
+
+1. WD1, 10 am: The Finance Controller sends the close calendar to the finance lead of each entity.
+2. WD1: The FP&A analyst downloads the bank statements for all three entities from the bank portal and saves them in the Close folder.
+3. WD1 to WD2: The FP&A analyst prepares accrual journals in the ERP for payroll, rent, professional fees and cloud costs.
+4. WD2: The FP&A analyst reconciles each bank account to the ledger. Every unreconciled item above Rs 10,000 is listed on the Recon tab of the close workbook.
+5. WD2: Intercompany balances between the three entities are matched. Differences above Rs 5,000 are sent to the entity finance lead for correction.
+6. WD3: Every journal entry above Rs 50 lakh must be approved by the Finance Controller in the ERP before it is posted.
+7. WD3: The books are closed and the ledger is locked at the end of WD3. No postings are allowed after the lock.
+8. WD3: The FP&A analyst prepares the variance pack comparing actuals with budget and with last month, with a comment on every line that moves by more than 5%.
+9. WD4: The Head of FP&A reviews the variance pack and sends it to the CFO.
+10. WD5: The ledger is locked at the end of WD5. Postings after WD5 move to next month's books.

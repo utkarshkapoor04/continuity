@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+
+# local tool settings
+.claude
+
+# secrets: never commit these
+.env.local
+.env*.local

@@ -1,0 +1,8 @@
+Case 1 - July close
+The Pune cost centre needed a Rs 72 lakh vendor-settlement journal posted. It was not raised in the ERP for approval. Meera, the Controller, approved it on a phone call with the Pune site head, and the analyst posted it the next morning, noting the call in the ticket comment. The ERP approval was done after the fact on WD4.
+
+Case 2 - August close
+The Singapore bank statements arrive in SGD. The analyst converted them using the rate in a personal spreadsheet kept by Deepak, because the ERP rate table is only updated at month end. The Recon tab shows the converted figures with no mention of the rate used.
+
+Case 3 - August close
+On WD4 evening the CFO asked for an Rs 18 lakh late invoice to be included. The ledger was still open, and the invoice was posted on the morning of WD5. The variance pack was sent to the CFO again on WD5 afternoon.
