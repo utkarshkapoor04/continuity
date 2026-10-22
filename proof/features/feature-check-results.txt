@@ -1,19 +1,20 @@
 PASS  sheet built
 PASS  status shows answered count  (Handover status: 3 of 6 questions answered (50%))
-PASS  status bar width matches percent  (50%)
+PASS  status ring: value, drawn arc and centre label all match the percent  (50%|50%|50%)
+PASS  floating progress ring shows the live answered count  (50% 3 of 6 answered 1 for a live talk | 50%)
 PASS  open gaps chip matches the list  (chip 3, list 3)
-PASS  conflicts chip matches the rules on screen  (chip 6, rules 6)
-PASS  no-contingency chip matches the rules on screen  (chip 7, rules 7)
+PASS  conflicts chip matches the rules on screen  (chip 4, rules 4)
+PASS  no-contingency chip matches the rules on screen  (chip 12, rules 12)
 PASS  in-person chip shows 1
-PASS  copy puts the Markdown on the clipboard  (6360 characters)
-PASS  copied Markdown has one section per rule  (18 vs 18)
+PASS  copy puts the Markdown on the clipboard  (6199 characters)
+PASS  copied Markdown has one section per rule  (15 vs 15)
 PASS  copied Markdown keeps the quotes
 PASS  copied Markdown has the status block
 PASS  copy confirmation shown  (Copied to the clipboard.)
 PASS  download is named continuity-rules-sheet.md  (continuity-rules-sheet.md)
 PASS  download is Markdown text  (text/markdown;charset=utf-8)
-PASS  download content equals the copied text  (6360 vs 6360 characters)
+PASS  download content equals the copied text  (6199 vs 6199 characters)
 PASS  a file really landed in the downloads folder  (continuity-rules-sheet.md)
-PASS  print shows only the rules sheet  (["3. Rules sheet\nHan"])
+PASS  print shows only the rules sheet  (["3. Rules sheet\n50%"])
 PASS  print hides buttons and the page title
-PASS  PDF produced from the print view  (102 KB)
+PASS  PDF produced from the print view  (591 KB)

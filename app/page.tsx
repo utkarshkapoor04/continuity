@@ -96,6 +96,66 @@ function Ring({ percent, size = 96, stroke = 7, children }: { percent: number; s
 }
 
 // Cycles through short status messages while a slow AI step runs, so the wait feels like progress.
+const DEMO = [
+  {
+    line: "Payment run happens every Thursday; invoices posted after Wednesday 6 PM go to next week.",
+    ask: "What happens to an urgent vendor invoice that misses the Wednesday cut-off?",
+    tag: "no contingency documented",
+  },
+  {
+    line: "Every journal entry above Rs 50 lakh must be approved by the Finance Controller before it is posted.",
+    ask: "Who approves it when the Controller is on leave and the books close tomorrow?",
+    tag: "no contingency documented",
+  },
+  {
+    line: "Convert foreign currency statements at the closing rate.",
+    ask: "Which rate source counts, and is Deepak's own spreadsheet allowed?",
+    tag: "conflict to check",
+  },
+];
+
+// A tiny, self-playing preview of what the app does. Pure display, no AI.
+function HeroDemo() {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setI((n) => (n + 1) % DEMO.length), 3800);
+    return () => clearInterval(t);
+  }, [paused]);
+  const d = DEMO[i];
+  return (
+    <div className="demo" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} aria-label="Preview of how Continuity works">
+      <div className="demo-doc">
+        <span className="demo-label">Your SOP</span>
+        <ul>
+          {DEMO.map((x, n) => (
+            <li
+              key={n}
+              tabIndex={0}
+              className={n === i ? "on" : ""}
+              onMouseEnter={() => setI(n)}
+              onFocus={() => setI(n)}
+              onClick={() => setI(n)}
+            >
+              {x.line}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="demo-arrow" aria-hidden="true">→</div>
+      <div className="demo-gap" key={i}>
+        <span className="demo-label">What it asks the leaver</span>
+        <p className="demo-q">{d.ask}</p>
+        <p className="demo-src">
+          Quotes: <q>{d.line.slice(0, 44)}…</q>
+        </p>
+        <span className="demo-tag">{d.tag}</span>
+      </div>
+    </div>
+  );
+}
+
 function useCycle(messages: string[], active: boolean): string {
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -438,10 +498,31 @@ export default function Home() {
 
   return (
     <>
-      <header className="hero">
+      <header className={`hero${questions.length > 0 ? " compact" : ""}`}>
+        <div className="aurora" aria-hidden="true" />
         <div className="wrap">
-          <h1>Continuity</h1>
-          <p className="tagline">Paste the handover SOP and a few real cases. Find what they don&apos;t say.</p>
+          <div className="brand"><span className="logo" aria-hidden="true" /><h1>Continuity</h1></div>
+          {questions.length === 0 && (
+            <>
+              <p className="display">
+                When someone leaves, <em>the unwritten rules</em> leave with them.
+              </p>
+              <p className="tagline">
+                Paste the handover SOP and a few real cases. Continuity asks the leaver the questions the documents leave open, then turns the answers into a sourced rules sheet your team can ask.
+              </p>
+              <div className="cta">
+                <button type="button" className="btn-cta" onClick={() => { loadSample("fpna"); scrollToSection("sec-input"); }}>Try a sample →</button>
+                <button type="button" className="secondary" onClick={() => scrollToSection("sec-input")}>Use my own documents</button>
+              </div>
+              <HeroDemo />
+              <ol className="flow">
+                <li><b>1</b><span>Paste</span><small>the SOP and real cases</small></li>
+                <li><b>2</b><span>Find gaps</span><small>every question quotes your text</small></li>
+                <li><b>3</b><span>Capture</span><small>the leaver answers what they can</small></li>
+                <li><b>4</b><span>Ask</span><small>answers cite a rule, or say not captured</small></li>
+              </ol>
+            </>
+          )}
           <nav className="stepper" aria-label="Progress">
             <ol>
               {steps.map((s, i) => (
